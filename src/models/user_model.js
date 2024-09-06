@@ -29,7 +29,7 @@ const userSchema = new Schema(
             required: true
         },
         coverImage: {
-            type: string
+            type: String
         },
         watchHistory: [
             {
