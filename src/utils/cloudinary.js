@@ -1,15 +1,14 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 
-cloudinary.config({
-  cloud_name: process.env.CLOUD_NAME,
-  api_key: process.env.API_KEY,
-  api_secret: process.env.API_SECRET,
-});
-
 const uploadOnCloudinary = async (localFilePath) => {
   try {
-    if (!localFilePath) throw Error("FIle Not Found!!!");
+    cloudinary.config({
+      cloud_name: process.env.CLOUD_NAME,
+      api_key: process.env.API_KEY,
+      api_secret: process.env.API_SECRET,
+    });
+    if (!localFilePath) return null;
     const res = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
     });
@@ -21,6 +20,11 @@ const uploadOnCloudinary = async (localFilePath) => {
     console.log("File not uploaded ,Something Went Wrong: ", error);
     return null;
   } finally {
-    fs.unlinkSync(localFilePath);
+    if (localFilePath) {
+      console.log("localFilePathCloudinaryUnlinkingfile:", localFilePath);
+      fs.unlinkSync(localFilePath);
+    }
   }
 };
+
+export default uploadOnCloudinary;

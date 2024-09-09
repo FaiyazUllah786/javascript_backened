@@ -11,19 +11,21 @@
 //     }
 // }
 
-// Another Way to Write the same Function 
+// Another Way to Write the same Function
 
 const asyncHandler = (requestHandler) => {
-    (req, res, next) => {
-        Promise.resolve(requestHandler(req, res, next)).catch((err) => next(err));
-    }
-}
+  return (req, res, next) => {
+    Promise.resolve(requestHandler(req, res, next)).catch((err) => {
+      console.log(err, "is here");
+      next(err);
+    });
+  };
+};
 
-export { asyncHandler }
+export { asyncHandler };
 
 // const asyncHandler = ()=>{}
 //Higher Order Function Takes Low Level Function func i(mproving writng downward)
 // const asyncHandler = (func)=>{(){}}
 // const asyncHandler = (func)=>(){}
 // const asyncHandler = (func)=>async ()=>{}
-

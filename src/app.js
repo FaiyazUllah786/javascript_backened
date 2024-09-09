@@ -4,17 +4,26 @@ import cors from "cors";
 
 const app = express();
 
-app.use(cors({
-    origin :process.env.CORS_ORIGIN,
-    credentials:true,
-}));
+//Configurations
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN,
+    credentials: true,
+  })
+);
 
-app.use(express.json({limit:"16kb"}));
+app.use(express.json({ limit: "16kb" }));
 
-app.use(express.urlencoded({limit:"16kb",extended:true}));
+app.use(express.urlencoded({ limit: "16kb", extended: true }));
 
 app.use(express.static("../public"));
 
 app.use(cookieParser());
 
-export {app} ;
+//Routes
+import userRouter from "./routes/user.routes.js";
+
+app.use("/user", userRouter);
+//https://localhost:6000/user/register  -> registerUser()
+
+export { app };

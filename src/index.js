@@ -1,22 +1,22 @@
 import dotenv from "dotenv";
-import connnectDB from "./db/db.js";
-import {app} from "./app.js"
+import connectDB from "./db/db.js";
+import { app } from "./app.js";
 
-dotenv.config({path:"./env"});
+dotenv.config({ path: ".env" });
 
-connnectDB().then(()=>{
-    app.on("error",(error)=>{
-        console.log("Erros Occured Before App Initiated:",error);
-        throw error;
+connectDB()
+  .then(() => {
+    app.on("error", (error) => {
+      console.log("Erros Occured Before App Initiated:", error);
+      throw error;
     });
-    app.listen(process.env.PORT,()=>{
-        console.log("Sever is Running at PORT",process.env.PORT);
+    app.listen(process.env.PORT, () => {
+      console.log("Sever is Running at PORT", process.env.PORT);
     });
-}).catch((err)=>{
-    console.log("MongoDB connection Failed:",err);
-});
-
-
+  })
+  .catch((err) => {
+    console.log("MongoDB connection Failed:", err);
+  });
 
 // ;(async()=>{
 //     try{

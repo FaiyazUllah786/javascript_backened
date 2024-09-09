@@ -30,6 +30,7 @@ const userSchema = new Schema(
     },
     coverImage: {
       type: String,
+      default: null,
     },
     watchHistory: [
       {
@@ -54,7 +55,7 @@ const userSchema = new Schema(
 //Encrypting password use function(){} not ()=>{} because this function(){} has ability of this.pointer
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-  this.password = bcrypt.hash(this.password, 10);
+  this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
