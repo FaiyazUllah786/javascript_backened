@@ -5,7 +5,12 @@ import { ApiError } from "../utils/ApiError.js";
 
 export const verifyJWT = asyncHandler(async (req, _, next) => {
   try {
+    console.log("Verifying JWT Token");
     //accessCookies either directly or from Header
+    if (req.header("x-app-type") === "mobile") {
+      //check if request is coming from mobile app
+      next();
+    }
     const accessToken =
       req.cookies?.accessToken ||
       req.header("Authorization").replace("Bearer ", "");

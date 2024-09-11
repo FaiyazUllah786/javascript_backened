@@ -50,6 +50,7 @@ const registerUser = asyncHandler(async (req, res) => {
       throw new ApiError(409, "email already exist");
     }
 
+    console.log("req files----", req.files);
     avatarLocalPath = req.files?.avatar[0]?.path;
     // coverImageLocalPath = req.files?.coverImage[0]?.path; //it is a problem of JS as null try to access coverImage[0]
     if (
@@ -191,8 +192,7 @@ const loginUser = asyncHandler(async (req, res) => {
 const logoutUser = asyncHandler(async (req, res) => {
   //after jwt verification get user (ie if user already in a session means have an access key )
   //we get the user from accessToken decryption from jwt verification
-  const user = req.user;
-
+  const user = req.user ?? req.body;
   //update user refreshToken
   const loggedOutUser = await User.findByIdAndUpdate(user._id, {
     $set: { refreshToken: undefined },
@@ -261,4 +261,147 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     );
 });
 
-export { registerUser, loginUser, logoutUser, refreshAccessToken };
+const updatePassword = asyncHandler(async (req, res) => {
+  //take old password and new password
+  //take user from session
+  //validate password
+  //update password
+  const { oldPassword, newPassword } = req.body;
+  console.log(oldPassword, newPassword);
+  if (!oldPassword || !newPassword) {
+    throw new ApiError(400, "Password is required");
+  }
+
+  const user = await User.findById(req.user?._id);
+  if (!user) {
+    throw new ApiError(400, "user not found");
+  }
+  const checkPassword = await user.isPasswordCorrect(`${oldPassword}`);
+  if (!checkPassword) {
+    throw new ApiError(400, "Password is incorrect");
+  }
+
+  //this method of updatationg is required ..because before save the password need to be encrpyted by bcrypt
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "user taken from middleware"));
+});
+
+const udpateAccountDetails = asyncHandler(async (req, res) => {
+  const { userName, fullName, email } = req.body;
+
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        userName: userName || req.user.userName,
+        fullName: fullName || req.user.fullName,
+        email: email || req.user.email,
+      },
+    },
+    { new: true }
+  ).select("-password -refreshToken");
+
+  if (!user) {
+    throw new ApiError(400, "user not found");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { user }, "profile updated successfully"));
+});
+
+const updateUserAvatar = asyncHandler(async (req, res) => {
+  const avatarLocalPath = req.file?.path;
+  if (!avatarLocalPath) {
+    throw new ApiError(400, "avatar image not found");
+  }
+  const avatar = await uploadOnCloudinary(avatarLocalPath);
+  if (!avatar) {
+    throw new ApiError(400, "Error while uploading avatar");
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        avatar: avatar.url,
+      },
+    },
+    { new: true }
+  );
+
+  if (!user) {
+    throw new ApiError(400, "user not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { user }, "avatar image updated successfully"));
+});
+
+const updateUserCoverImage = asyncHandler(async (req, res) => {
+  const coverImageLocalPath = req.file?.path;
+  if (!coverImageLocalPath) {
+    throw new ApiError(400, "avatar image not found");
+  }
+  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+  if (!coverImage) {
+    throw new ApiError(400, "Error while uploading avatar");
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        coverImage: coverImage.url,
+      },
+    },
+    { new: true }
+  );
+
+  if (!user) {
+    throw new ApiError(400, "user not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { user }, "cover image updated successfully"));
+});
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    throw new ApiError(400, "User not found");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { user }, "current user profile"));
+});
+
+const deleteUser = asyncHandler(async (req, res) => {
+  const id = req.user?._id;
+  console.log("user id", id);
+  const response = await User.deleteOne({ _id: req.user?._id });
+  console.log(response, "resong");
+  if (!response) {
+    throw new ApiError(400, "Something went wrong");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, response, "Account deleted successfully"));
+});
+export {
+  registerUser,
+  loginUser,
+  logoutUser,
+  refreshAccessToken,
+  updatePassword,
+  udpateAccountDetails,
+  updateUserAvatar,
+  updateUserCoverImage,
+  getCurrentUser,
+  deleteUser,
+};
